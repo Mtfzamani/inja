@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+</head>
+<body>
+    <h1>Welcome to the Chat Room</h1>
+
+    <div>
+        <input id="usernameInput" type="text" placeholder="Enter your username" autocomplete="off">
+        <input id="roomInput" type="text" placeholder="Enter room name" autocomplete="off">
+        <button id="joinButton">Join Room</button>
+    </div>
+
+    <div id="messages"></div>
+    <input id="messageInput" type="text" placeholder="Type a message..." autocomplete="off" disabled>
+    <button id="sendButton" disabled>Send</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const usernameInput = document.getElementById('usernameInput');
+        const roomInput = document.getElementById('roomInput');
+        const joinButton = document.getElementById('joinButton');
+
+        let username = '';
+        let room = '';
+
+        // Handle room joining
+        joinButton.addEventListener('click', () => {
+            username = usernameInput.value;
+            room = roomInput.value;
+
+            if (username && room) {
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                socket.emit('join room', room); // Join the specified room
+            } else {
+                alert("Please enter both a username and a room name.");
+            }
+        });
+
+        // Listen for incoming messages
+        socket.on('chat message', (data) => {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${data.username}: ${data.message}`;
+            messagesDiv.appendChild(messageElement);
+        });
+
+        // Send message when button is clicked
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value;
+            if (message && username && room) {
+                socket.emit('chat message', { username, message, room });
+                messageInput.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
